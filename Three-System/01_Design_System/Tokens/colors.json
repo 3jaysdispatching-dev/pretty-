@@ -1,0 +1,10 @@
+{
+  "color": {
+    "primary": "#0A74FF",
+    "primary-700": "#0858cc",
+    "background": "#FFFFFF",
+    "surface": "#F9FAFB",
+    "text-primary": "#0F172A",
+    "muted": "#6B7280"
+  }
+}

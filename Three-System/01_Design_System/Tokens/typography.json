@@ -1,0 +1,12 @@
+{
+  "font": {
+    "family": {
+      "base": "Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue'"
+    },
+    "size": {
+      "body": "16px",
+      "small": "14px",
+      "large": "20px"
+    }
+  }
+}
