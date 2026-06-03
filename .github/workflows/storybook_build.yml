@@ -2,9 +2,11 @@ name: Build Storybook
 
 on:
   push:
-    branches: [ pretty ]
+    branches:
+      - pretty
   pull_request:
-    branches: [ pretty ]
+    branches:
+      - pretty
 
 jobs:
   build:

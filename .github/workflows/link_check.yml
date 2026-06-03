@@ -1,8 +1,6 @@
 name: Link Check
 
-on:
-  push:
-  pull_request:
+on: [push, pull_request]
 
 jobs:
   linkcheck:
