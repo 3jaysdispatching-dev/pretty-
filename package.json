@@ -1,0 +1,14 @@
+{
+  "name": "three-system",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "storybook": "start-storybook -p 6006 -s Three-System",
+    "build-storybook": "build-storybook -s Three-System"
+  },
+  "devDependencies": {
+    "@storybook/react": "^7.0.0",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0"
+  }
+}
