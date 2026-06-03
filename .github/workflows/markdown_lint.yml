@@ -13,4 +13,4 @@ jobs:
         uses: github/super-linter@v5
         env:
           VALIDATE_MARKDOWN: true
-          VALIDATE_JSON: false
+          VALIDATE_ALL: false
