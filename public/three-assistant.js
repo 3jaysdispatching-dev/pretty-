@@ -145,15 +145,29 @@ class THREEAutonomous {
 
     async loadFleetData() {
         try {
-            const response = await fetch('/api/drivers');
-            const drivers = await response.json();
+            // Fetch real drivers from database
+            const driverRes = await fetch('/api/drivers');
+            const drivers = await driverRes.json();
             this.context.activeDrivers = drivers.length;
+            this.context.firstDriver = drivers[0] || null;
 
+            // Fetch real loads from database
             const loadsRes = await fetch('/api/loads');
             const loads = await loadsRes.json();
             this.context.activeLoads = loads.filter(l => l.status !== 'Delivered').length;
+            this.context.firstLoad = loads[0] || null;
+            this.context.allLoads = loads;
 
             this.updateOperationPanel();
+            
+            // Log what we found
+            if (this.context.firstDriver) {
+                this.addMessage(`✓ Found first driver: ${this.context.firstDriver.name || 'Driver #' + this.context.firstDriver.id}`, 'assistant');
+            }
+            if (this.context.firstLoad) {
+                this.addMessage(`✓ Found first load: #${this.context.firstLoad.id} from ${this.context.firstLoad.origin} to ${this.context.firstLoad.destination}`, 'assistant');
+            }
+            
             this.addMessage(`📊 Fleet data loaded: ${drivers.length} drivers, ${this.context.activeLoads} active loads`, 'assistant');
         } catch (error) {
             console.error('Fleet data load failed:', error);
@@ -202,22 +216,51 @@ class THREEAutonomous {
 
     async autoAssignLoads() {
         try {
-            const response = await fetch('/api/loads?status=Pending');
-            const pendingLoads = await response.json();
+            // Get pending loads
+            const response = await fetch('/api/loads');
+            const allLoads = await response.json();
+            const pendingLoads = allLoads.filter(l => l.status === 'Pending');
             
-            if (pendingLoads.length > 0) {
-                this.addMessage(`📦 Auto-assigning ${pendingLoads.length} pending loads to available drivers...`, 'assistant');
+            // Get available drivers
+            const driverRes = await fetch('/api/drivers');
+            const drivers = await driverRes.json();
+            
+            if (pendingLoads.length > 0 && drivers.length > 0) {
+                this.addMessage(`📦 Found ${pendingLoads.length} pending loads and ${drivers.length} available drivers`, 'assistant');
+                this.addMessage(`📦 Auto-assigning loads to drivers...`, 'assistant');
                 
-                for (const load of pendingLoads) {
-                    const driver = await this.findBestDriver(load);
-                    if (driver) {
-                        await this.assignLoadToDriver(load.id, driver.id);
-                        this.addMessage(`✓ Load #${load.id} assigned to ${driver.name}`, 'assistant');
+                // Get first load and first driver
+                const firstLoad = pendingLoads[0];
+                const firstDriver = drivers[0];
+                
+                if (firstLoad && firstDriver) {
+                    this.addMessage(`🎯 Assigning Load #${firstLoad.id} to ${firstDriver.name}...`, 'assistant');
+                    
+                    // Assign the load
+                    const assignRes = await fetch(`/api/loads/${firstLoad.id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            driver_id: firstDriver.id, 
+                            status: 'Assigned' 
+                        })
+                    });
+                    
+                    if (assignRes.ok) {
+                        this.addMessage(`✅ SUCCESS: Load #${firstLoad.id} assigned to Driver ${firstDriver.name}`, 'assistant');
+                        this.addMessage(`📍 Route: ${firstLoad.origin} → ${firstLoad.destination}`, 'assistant');
+                        this.addMessage(`💰 Rate: $${firstLoad.rate}`, 'assistant');
+                        this.loadFleetData(); // Refresh data
+                    } else {
+                        this.addMessage(`❌ Failed to assign load`, 'assistant');
                     }
                 }
+            } else {
+                this.addMessage(`⚠️ No pending loads to assign or no available drivers`, 'assistant');
             }
         } catch (error) {
             console.error('Auto-assign failed:', error);
+            this.addMessage(`⚠️ Error during assignment: ${error.message}`, 'assistant');
         }
     }
 
@@ -295,6 +338,35 @@ class THREEAutonomous {
     processNaturalLanguage(command) {
         const cmd = command.toLowerCase();
 
+        // Get first driver and load
+        if (cmd.includes('first driver') || cmd.includes('first load') || cmd.includes('find driver') || cmd.includes('find load')) {
+            let response = '';
+            if (this.context.firstDriver) {
+                response += `👤 First Driver: ${this.context.firstDriver.name}\n`;
+                response += `📍 Location: ${this.context.firstDriver.home_base}\n`;
+                response += `🚗 Truck: ${this.context.firstDriver.truck_number}\n`;
+                response += `📞 Phone: ${this.context.firstDriver.phone}\n`;
+            }
+            if (this.context.firstLoad) {
+                response += `\n📦 First Load: #${this.context.firstLoad.id}\n`;
+                response += `📍 Route: ${this.context.firstLoad.origin} → ${this.context.firstLoad.destination}\n`;
+                response += `💰 Rate: $${this.context.firstLoad.rate}\n`;
+                response += `⚖️ Weight: ${this.context.firstLoad.weight} lbs\n`;
+                response += `📊 Status: ${this.context.firstLoad.status}\n`;
+            }
+            return response || 'No driver or load data available';
+        }
+
+        // Assign first driver to first load
+        if (cmd.includes('assign') && cmd.includes('first')) {
+            if (this.context.firstDriver && this.context.firstLoad) {
+                this.addMessage(`🎯 Assigning ${this.context.firstDriver.name} to Load #${this.context.firstLoad.id}...`, 'user');
+                this.autoAssignLoads();
+                return 'Assigning first driver to first load...';
+            }
+            return 'No driver or load available to assign';
+        }
+
         // Load creation
         if (cmd.includes('create') && cmd.includes('load')) {
             return this.parseLoadCommand(command);
@@ -325,7 +397,7 @@ class THREEAutonomous {
         }
 
         // Default autonomous response
-        return "🤖 Command received and processing. I can:\n✓ Create/assign loads automatically\n✓ Optimize routes in real-time\n✓ Track compliance & HOS\n✓ Generate invoices\n✓ Monitor fleet 24/7\nWhat specific task would you like?";
+        return "🤖 Command received and processing. I can:\n✓ Find first driver & first load\n✓ Assign drivers to loads\n✓ Create/assign loads automatically\n✓ Optimize routes in real-time\n✓ Track compliance & HOS\n✓ Generate invoices\n✓ Monitor fleet 24/7\nWhat would you like?";
     }
 
     parseLoadCommand(command) {
@@ -341,9 +413,13 @@ class THREEAutonomous {
 
     executeOperation(operation) {
         const ops = {
-            'auto-dispatch': () => {
-                this.addMessage('🚀 Auto-dispatch engaged:\n✓ Analyzing 5 pending loads\n✓ Matching to available drivers\n✓ Assigning 4 loads\n✓ 1 load waiting for optimal driver match', 'assistant');
-                this.autoAssignLoads();
+            'auto-dispatch': async () => {
+                this.addMessage('🚀 Auto-dispatch engaged...', 'assistant');
+                // First, show what we found
+                if (this.context.firstDriver && this.context.firstLoad) {
+                    this.addMessage(`🎯 Found: ${this.context.firstDriver.name} available\n📦 Load #${this.context.firstLoad.id} pending`, 'assistant');
+                }
+                await this.autoAssignLoads();
             },
             'optimize-all': () => {
                 this.addMessage('⚙️ Full fleet optimization:\n✓ Route optimization +8%\n✓ Workload balancing\n✓ Fuel efficiency improved\n✓ ETA accuracy +12%', 'assistant');
