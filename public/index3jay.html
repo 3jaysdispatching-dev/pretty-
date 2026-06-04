@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DispatchOS — Fleet Management</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+</head>
+<body>
+<div id="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">Dispatch<span class="accent">OS</span></div>
+    <nav class="sidenav">
+      <div class="nav-item active" data-view="dashboard" onclick="navigate(this)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        Dashboard
+      </div>
+      <div class="nav-item" data-view="map" onclick="navigate(this)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg>
+        Live Map
+      </div>
+      <div class="nav-item" data-view="loads" onclick="navigate(this)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        Load Board
+      </div>
+      <div class="nav-item" data-view="drivers" onclick="navigate(this)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Drivers
+      </div>
+      <div class="nav-item" data-view="route" onclick="navigate(this)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Route Planner
+      </div>
+      <div class="nav-item" data-view="compliance" onclick="navigate(this)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        Compliance
+      </div>
+      <div class="nav-item" data-view="billing" onclick="navigate(this)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+        Billing
+      </div>
+      <div class="nav-item" data-view="settings" onclick="navigate(this)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        Settings
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="live-badge">● LIVE</div>
+      <div class="version">v2.0 · DispatchOS</div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <!-- TOPBAR -->
+    <header class="topbar">
+      <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+      <div class="topbar-title" id="page-title">Dashboard</div>
+      <div class="topbar-right">
+        <div class="topbar-stat green" id="stat-active">12 Active</div>
+        <div class="topbar-stat blue" id="stat-loads">4 Loads</div>
+        <div class="topbar-stat warn" id="stat-alerts">1 Alert</div>
+        <button class="btn-icon" onclick="showNotifications()" title="Notifications">🔔</button>
+      </div>
+    </header>
+
+    <!-- NOTIFICATIONS PANEL -->
+    <div class="notif-panel" id="notif-panel">
+      <div class="notif-hdr">
+        <span>Notifications</span>
+        <button onclick="showNotifications()">✕</button>
+      </div>
+      <div id="notif-list"></div>
+    </div>
+
+    <!-- VIEWS -->
+    <div class="views">
+
+      <!-- DASHBOARD -->
+      <div class="view active" id="view-dashboard">
+        <div class="kpi-grid" id="kpi-grid"></div>
+        <div class="dash-grid">
+          <div class="card">
+            <div class="card-hdr">
+              <span class="card-title">Loads In Progress</span>
+              <button class="btn-sm" onclick="navigate(document.querySelector('[data-view=loads]'))">View All</button>
+            </div>
+            <table class="tbl" id="dash-loads-tbl">
+              <thead><tr><th>Load #</th><th>Route</th><th>Driver</th><th>Status</th><th>ETA</th></tr></thead>
+              <tbody id="dash-loads-body"></tbody>
+            </table>
+          </div>
+          <div class="card">
+            <div class="card-hdr"><span class="card-title">Fleet Status</span></div>
+            <div id="dash-drivers-list"></div>
+          </div>
+        </div>
+        <div class="card" style="margin-top:16px">
+          <div class="card-hdr"><span class="card-title">Activity Feed</span></div>
+          <div id="activity-feed"></div>
+        </div>
+      </div>
+
+      <!-- LIVE MAP -->
+      <div class="view" id="view-map">
+        <div class="card" style="height:calc(100vh - 120px);min-height:500px">
+          <div class="card-hdr">
+            <span class="card-title">Live Fleet Map</span>
+            <span class="live-dot">● LIVE</span>
+            <div style="margin-left:auto;display:flex;gap:8px">
+              <select id="map-filter" onchange="filterMapDrivers()" class="select-sm">
+                <option value="">All drivers</option>
+                <option value="available">Available only</option>
+                <option value="busy">On load</option>
+                <option value="alert">Alerts</option>
+              </select>
+            </div>
+          </div>
+          <div id="map" style="height:calc(100% - 50px);border-radius:0 0 10px 10px"></div>
+        </div>
+      </div>
+
+      <!-- LOAD BOARD -->
+      <div class="view" id="view-loads">
+        <div class="card">
+          <div class="card-hdr">
+            <input type="text" class="search-input" placeholder="Search loads…" oninput="filterLoads(this.value)" id="load-search">
+            <select class="select-sm" id="load-status-f" onchange="filterLoads(document.getElementById('load-search').value)">
+              <option value="">All statuses</option>
+              <option>Pending</option><option>Assigned</option><option>At Pickup</option><option>In Transit</option><option>Delivered</option>
+            </select>
+            <select class="select-sm" id="load-priority-f" onchange="filterLoads(document.getElementById('load-search').value)">
+              <option value="">All priorities</option>
+              <option>Hot</option><option>Normal</option><option>Low</option>
+            </select>
+            <div style="margin-left:auto;display:flex;gap:8px">
+              <button class="btn-sm" onclick="exportLoads()">Export CSV</button>
+              <button class="btn-primary" onclick="openModal('load-modal')">+ New Load</button>
+            </div>
+          </div>
+          <div style="overflow-x:auto">
+            <table class="tbl" id="loads-tbl">
+              <thead><tr>
+                <th>Load #</th><th>Origin</th><th>Destination</th><th>Commodity</th>
+                <th>Driver</th><th>Status</th><th>Rate</th><th>Priority</th><th>Actions</th>
+              </tr></thead>
+              <tbody id="loads-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- DRIVERS -->
+      <div class="view" id="view-drivers">
+        <div class="kpi-grid" id="driver-kpis"></div>
+        <div class="card">
+          <div class="card-hdr">
+            <input type="text" class="search-input" placeholder="Search drivers…" oninput="filterDrivers(this.value)">
+            <select class="select-sm" id="driver-status-f" onchange="filterDrivers(document.querySelector('#view-drivers .search-input').value)">
+              <option value="">All statuses</option>
+              <option value="available">Available</option>
+              <option value="busy">On Load</option>
+              <option value="alert">Alert</option>
+              <option value="offline">Offline</option>
+            </select>
+            <div style="margin-left:auto">
+              <button class="btn-primary" onclick="openModal('driver-modal')">+ Add Driver</button>
+            </div>
+          </div>
+          <table class="tbl">
+            <thead><tr><th>Driver</th><th>Truck</th><th>Location</th><th>Status</th><th>HOS Left</th><th>Current Load</th><th>Phone</th><th>Actions</th></tr></thead>
+            <tbody id="drivers-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ROUTE PLANNER -->
+      <div class="view" id="view-route">
+        <div class="route-grid">
+          <div class="card">
+            <div class="card-hdr"><span class="card-title">Route Optimizer</span></div>
+            <div style="padding:16px">
+              <div class="form-group"><label>Origin</label><input type="text" id="r-origin" placeholder="e.g. Chicago, IL" class="inp"></div>
+              <div class="form-group"><label>Destination</label><input type="text" id="r-dest" placeholder="e.g. Nashville, TN" class="inp"></div>
+              <div class="form-group"><label>Stops (optional, comma-separated)</label><input type="text" id="r-stops" placeholder="e.g. Louisville, KY" class="inp"></div>
+              <div class="form-row">
+                <div class="form-group"><label>Load weight (lbs)</label><input type="number" id="r-weight" placeholder="40000" class="inp"></div>
+                <div class="form-group"><label>Truck type</label>
+                  <select id="r-truck" class="inp">
+                    <option>Dry Van</option><option>Reefer</option><option>Flatbed</option><option>Tanker</option>
+                  </select>
+                </div>
+              </div>
+              <button class="btn-primary" style="width:100%;margin-top:8px" onclick="optimizeRoute()">Calculate Route ↗</button>
+            </div>
+            <div id="route-result" style="display:none;padding:0 16px 16px">
+              <div class="route-stats" id="route-stats"></div>
+              <div class="card-title" style="margin:12px 0 8px">Suggested Drivers</div>
+              <div id="suggested-drivers"></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-hdr"><span class="card-title">Route Map</span></div>
+            <div id="route-map" style="height:460px;border-radius:0 0 10px 10px"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- COMPLIANCE -->
+      <div class="view" id="view-compliance">
+        <div class="comp-grid">
+          <div class="card">
+            <div class="card-hdr"><span class="card-title">Rate Engine</span>
+              <button class="btn-sm" style="margin-left:auto" onclick="openModal('rate-modal')">Edit Rates</button>
+            </div>
+            <div id="rate-list"></div>
+          </div>
+          <div class="card">
+            <div class="card-hdr"><span class="card-title">Fuel Surcharge Calculator</span></div>
+            <div style="padding:16px">
+              <div class="form-group"><label>Diesel price ($/gal)</label><input type="number" id="fuel-price" value="3.85" step="0.01" class="inp" oninput="calcFSC()"></div>
+              <div class="form-group"><label>Miles</label><input type="number" id="fuel-miles" value="500" class="inp" oninput="calcFSC()"></div>
+              <div class="form-group"><label>MPG</label><input type="number" id="fuel-mpg" value="6.5" step="0.1" class="inp" oninput="calcFSC()"></div>
+              <div class="fsc-result" id="fsc-result">FSC: $0.00</div>
+            </div>
+          </div>
+        </div>
+        <div class="card" style="margin-top:16px">
+          <div class="card-hdr"><span class="card-title">HOS & Compliance Tracker</span></div>
+          <table class="tbl">
+            <thead><tr><th>Driver</th><th>Truck</th><th>HOS Remaining</th><th>ELD Status</th><th>Violations</th><th>Next Maintenance</th><th>License Exp.</th></tr></thead>
+            <tbody id="comp-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- BILLING -->
+      <div class="view" id="view-billing">
+        <div class="kpi-grid" id="billing-kpis"></div>
+        <div class="card">
+          <div class="card-hdr">
+            <span class="card-title">Invoices</span>
+            <div style="margin-left:auto;display:flex;gap:8px">
+              <button class="btn-sm" onclick="exportInvoices()">Export CSV</button>
+              <button class="btn-primary" onclick="openModal('invoice-modal')">+ Generate Invoice</button>
+            </div>
+          </div>
+          <table class="tbl">
+            <thead><tr><th>Invoice #</th><th>Load</th><th>Customer</th><th>Amount</th><th>Driver Payout</th><th>Fuel Surcharge</th><th>Status</th><th>Due Date</th><th>Actions</th></tr></thead>
+            <tbody id="billing-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- SETTINGS -->
+      <div class="view" id="view-settings">
+        <div class="settings-grid">
+          <div class="card">
+            <div class="card-hdr"><span class="card-title">API Configuration</span></div>
+            <div style="padding:16px">
+              <div class="form-group"><label>Mapbox Token <a href="https://account.mapbox.com" target="_blank" class="help-link">Get free key →</a></label><input type="text" id="cfg-mapbox" class="inp" placeholder="pk.eyJ1Ijoi…"></div>
+              <div class="form-group"><label>Twilio Account SID <a href="https://www.twilio.com/try-twilio" target="_blank" class="help-link">Get free key →</a></label><input type="text" id="cfg-twilio-sid" class="inp" placeholder="ACxxx…"></div>
+              <div class="form-group"><label>Twilio Auth Token</label><input type="password" id="cfg-twilio-token" class="inp" placeholder="••••••••"></div>
+              <div class="form-group"><label>Twilio From Number</label><input type="text" id="cfg-twilio-from" class="inp" placeholder="+15550001234"></div>
+              <div class="form-group"><label>Samsara API Key <a href="https://cloud.samsara.com" target="_blank" class="help-link">Get key →</a></label><input type="text" id="cfg-samsara" class="inp" placeholder="samsara_api_…"></div>
+              <button class="btn-primary" onclick="saveSettings()">Save Settings</button>
+              <div id="settings-msg" style="margin-top:10px;font-size:12px;color:var(--accent)"></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-hdr"><span class="card-title">Company Profile</span></div>
+            <div style="padding:16px">
+              <div class="form-group"><label>Company name</label><input type="text" id="cfg-company" class="inp" placeholder="Your Trucking Co."></div>
+              <div class="form-group"><label>MC Number</label><input type="text" id="cfg-mc" class="inp" placeholder="MC-XXXXXX"></div>
+              <div class="form-group"><label>DOT Number</label><input type="text" id="cfg-dot" class="inp" placeholder="USDOT XXXXXX"></div>
+              <div class="form-group"><label>Dispatcher email</label><input type="text" id="cfg-email" class="inp" placeholder="dispatch@company.com"></div>
+              <button class="btn-primary" onclick="saveCompany()">Save Profile</button>
+            </div>
+          </div>
+          <div class="card" style="grid-column:1/-1">
+            <div class="card-hdr"><span class="card-title">Setup Guide — Get All APIs Free</span></div>
+            <div id="setup-guide" style="padding:16px"></div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /views -->
+  </main>
+</div>
+
+<!-- MODALS -->
+<div class="modal-bg" id="load-modal" onclick="closeModalBg(event,'load-modal')">
+  <div class="modal">
+    <div class="modal-title">New Load</div>
+    <div class="form-grid2">
+      <div class="form-group"><label>Origin *</label><input type="text" id="f-origin" class="inp" placeholder="City, ST"></div>
+      <div class="form-group"><label>Destination *</label><input type="text" id="f-dest" class="inp" placeholder="City, ST"></div>
+      <div class="form-group"><label>Commodity</label><input type="text" id="f-comm" class="inp" placeholder="Freight type"></div>
+      <div class="form-group"><label>Weight (lbs)</label><input type="number" id="f-weight" class="inp" placeholder="0"></div>
+      <div class="form-group"><label>Rate ($)</label><input type="number" id="f-rate" class="inp" placeholder="0.00"></div>
+      <div class="form-group"><label>Priority</label>
+        <select id="f-priority" class="inp"><option>Normal</option><option>Hot</option><option>Low</option></select>
+      </div>
+      <div class="form-group"><label>Assign Driver</label>
+        <select id="f-driver" class="inp"><option value="">Auto-match nearest available</option></select>
+      </div>
+      <div class="form-group"><label>Pickup Date</label><input type="date" id="f-date" class="inp"></div>
+      <div class="form-group"><label>Shipper name</label><input type="text" id="f-shipper" class="inp"></div>
+      <div class="form-group"><label>Customer name</label><input type="text" id="f-customer" class="inp"></div>
+    </div>
+    <div class="form-group" style="margin-top:10px"><label>Notes</label><textarea id="f-notes" class="inp" rows="2" placeholder="Special instructions…"></textarea></div>
+    <div class="modal-footer">
+      <button class="btn-sm" onclick="closeModal('load-modal')">Cancel</button>
+      <button class="btn-primary" onclick="saveLoad()">Create Load</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="driver-modal" onclick="closeModalBg(event,'driver-modal')">
+  <div class="modal">
+    <div class="modal-title">Add Driver</div>
+    <div class="form-grid2">
+      <div class="form-group"><label>Full name *</label><input type="text" id="dn-name" class="inp"></div>
+      <div class="form-group"><label>Phone</label><input type="text" id="dn-phone" class="inp" placeholder="+1 555 000 0000"></div>
+      <div class="form-group"><label>Truck #</label><input type="text" id="dn-truck" class="inp" placeholder="T-XXX"></div>
+      <div class="form-group"><label>Home base</label><input type="text" id="dn-base" class="inp" placeholder="City, ST"></div>
+      <div class="form-group"><label>CDL class</label>
+        <select id="dn-cdl" class="inp"><option>Class A</option><option>Class B</option><option>Class C</option></select>
+      </div>
+      <div class="form-group"><label>License exp.</label><input type="date" id="dn-lic" class="inp"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-sm" onclick="closeModal('driver-modal')">Cancel</button>
+      <button class="btn-primary" onclick="saveDriver()">Add Driver</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="invoice-modal" onclick="closeModalBg(event,'invoice-modal')">
+  <div class="modal">
+    <div class="modal-title">Generate Invoice</div>
+    <div class="form-grid2">
+      <div class="form-group"><label>Load #</label>
+        <select id="inv-load" class="inp" onchange="prefillInvoice()"></select>
+      </div>
+      <div class="form-group"><label>Customer</label><input type="text" id="inv-customer" class="inp"></div>
+      <div class="form-group"><label>Linehaul rate ($)</label><input type="number" id="inv-rate" class="inp" oninput="calcInvoice()"></div>
+      <div class="form-group"><label>Fuel surcharge ($)</label><input type="number" id="inv-fsc" class="inp" oninput="calcInvoice()"></div>
+      <div class="form-group"><label>Detention ($)</label><input type="number" id="inv-det" value="0" class="inp" oninput="calcInvoice()"></div>
+      <div class="form-group"><label>Driver payout %</label><input type="number" id="inv-pct" value="65" class="inp" oninput="calcInvoice()"></div>
+    </div>
+    <div class="invoice-totals" id="invoice-totals"></div>
+    <div class="form-group" style="margin-top:10px"><label>Due date</label><input type="date" id="inv-due" class="inp"></div>
+    <div class="modal-footer">
+      <button class="btn-sm" onclick="closeModal('invoice-modal')">Cancel</button>
+      <button class="btn-primary" onclick="saveInvoice()">Save Invoice</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="rate-modal" onclick="closeModalBg(event,'rate-modal')">
+  <div class="modal">
+    <div class="modal-title">Edit Rate Engine</div>
+    <div id="rate-edit-form"></div>
+    <div class="modal-footer">
+      <button class="btn-sm" onclick="closeModal('rate-modal')">Cancel</button>
+      <button class="btn-primary" onclick="saveRates()">Save Rates</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
