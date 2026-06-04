@@ -147,14 +147,16 @@ class THREEAutonomous {
         try {
             // Fetch real drivers from database
             const driverRes = await fetch('/api/drivers');
-            const drivers = await driverRes.json();
+            const driverData = await driverRes.json();
+            const drivers = Array.isArray(driverData) ? driverData : (driverData.data || driverData.drivers || []);
             this.context.activeDrivers = drivers.length;
             this.context.firstDriver = drivers[0] || null;
 
             // Fetch real loads from database
             const loadsRes = await fetch('/api/loads');
-            const loads = await loadsRes.json();
-            this.context.activeLoads = loads.filter(l => l.status !== 'Delivered').length;
+            const loadsData = await loadsRes.json();
+            const loads = Array.isArray(loadsData) ? loadsData : (loadsData.data || loadsData.loads || []);
+            this.context.activeLoads = loads.filter(l => l.status && l.status !== 'Delivered').length;
             this.context.firstLoad = loads[0] || null;
             this.context.allLoads = loads;
 
@@ -218,12 +220,20 @@ class THREEAutonomous {
         try {
             // Get pending loads
             const response = await fetch('/api/loads');
-            const allLoads = await response.json();
-            const pendingLoads = allLoads.filter(l => l.status === 'Pending');
+            const loadsData = await response.json();
+            
+            // Handle if response is wrapped in object or is an array
+            let allLoads = Array.isArray(loadsData) ? loadsData : (loadsData.data || loadsData.loads || []);
+            
+            // Filter for pending loads (case-insensitive)
+            const pendingLoads = allLoads.filter(l => 
+                l.status && (l.status === 'Pending' || l.status === 'pending')
+            );
             
             // Get available drivers
             const driverRes = await fetch('/api/drivers');
-            const drivers = await driverRes.json();
+            const driversData = await driverRes.json();
+            let drivers = Array.isArray(driversData) ? driversData : (driversData.data || driversData.drivers || []);
             
             if (pendingLoads.length > 0 && drivers.length > 0) {
                 this.addMessage(`📦 Found ${pendingLoads.length} pending loads and ${drivers.length} available drivers`, 'assistant');
@@ -250,9 +260,10 @@ class THREEAutonomous {
                         this.addMessage(`✅ SUCCESS: Load #${firstLoad.id} assigned to Driver ${firstDriver.name}`, 'assistant');
                         this.addMessage(`📍 Route: ${firstLoad.origin} → ${firstLoad.destination}`, 'assistant');
                         this.addMessage(`💰 Rate: $${firstLoad.rate}`, 'assistant');
-                        this.loadFleetData(); // Refresh data
+                        await this.loadFleetData(); // Refresh data
                     } else {
-                        this.addMessage(`❌ Failed to assign load`, 'assistant');
+                        const errorText = await assignRes.text();
+                        this.addMessage(`❌ Failed to assign load: ${errorText}`, 'assistant');
                     }
                 }
             } else {
