@@ -1,0 +1,29 @@
+{
+  "brandName": "THREE",
+  "tagline": "Intelligent Fleet Dispatch Management",
+  "colors": {
+    "primary": "#9D4EDD",
+    "primaryDark": "#7B2CBF",
+    "secondary": "#FF006E",
+    "accent": "#00D9FF",
+    "success": "#06FFA5",
+    "warning": "#FFB703",
+    "error": "#FF006E",
+    "background": "#0A0E27",
+    "surface": "#1B2437",
+    "text": "#E8EAED",
+    "textMuted": "#9CA3AF"
+  },
+  "typography": {
+    "fontFamily": "Inter, Segoe UI, Roboto, sans-serif",
+    "heading": "600",
+    "body": "400",
+    "mono": "Fira Code, monospace"
+  },
+  "logo": {
+    "full": "THREE - Intelligent Dispatch",
+    "short": "THREE",
+    "symbol": "⬢",
+    "description": "Modern hexagon-based design representing connectivity and intelligence"
+  }
+}
