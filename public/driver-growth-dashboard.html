@@ -1,0 +1,691 @@
+/**
+ * THREE Driver Growth Dashboard UI
+ * Recruiting, Onboarding, Retention interface
+ */
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THREE Driver Growth System</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0A0E27;
+            color: #E8EAED;
+            min-height: 100vh;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            background: linear-gradient(180deg, #0A0E27 0%, #1B2437 100%);
+            border-right: 1px solid rgba(157, 78, 221, 0.2);
+            padding: 20px;
+        }
+
+        .sidebar h2 {
+            font-size: 18px;
+            margin-bottom: 24px;
+            color: #00D9FF;
+        }
+
+        .sidebar-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .nav-link {
+            padding: 12px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-link:hover {
+            background: rgba(157, 78, 221, 0.15);
+        }
+
+        .nav-link.active {
+            background: rgba(157, 78, 221, 0.25);
+            border-left-color: #9D4EDD;
+        }
+
+        /* Main */
+        .main {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .header {
+            background: var(--surface);
+            border-bottom: 1px solid rgba(157, 78, 221, 0.2);
+            padding: 20px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+        }
+
+        /* Cards */
+        .card {
+            background: #1B2437;
+            border: 1px solid rgba(157, 78, 221, 0.2);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        /* Recruiting View */
+        .recruiting-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .pipeline-box {
+            background: #252D47;
+            border: 1px solid rgba(157, 78, 221, 0.2);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .pipeline-icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+
+        .pipeline-name {
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .pipeline-count {
+            font-size: 24px;
+            color: #9D4EDD;
+            font-weight: 700;
+        }
+
+        .pipeline-subtitle {
+            font-size: 12px;
+            color: #9CA3AF;
+            margin-top: 4px;
+        }
+
+        /* Candidates Table */
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        th {
+            background: rgba(157, 78, 221, 0.1);
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #9CA3AF;
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid rgba(157, 78, 221, 0.1);
+        }
+
+        tr:hover {
+            background: rgba(157, 78, 221, 0.05);
+        }
+
+        /* Status Badges */
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .badge-prospect {
+            background: rgba(156, 163, 175, 0.2);
+            color: #9CA3AF;
+        }
+
+        .badge-interested {
+            background: rgba(0, 217, 255, 0.2);
+            color: #00D9FF;
+        }
+
+        .badge-onboarding {
+            background: rgba(255, 183, 3, 0.2);
+            color: #FFB703;
+        }
+
+        .badge-active {
+            background: rgba(6, 255, 165, 0.2);
+            color: #06FFA5;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 13px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #9D4EDD 0%, #7B2CBF 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 0 20px rgba(157, 78, 221, 0.5);
+        }
+
+        .btn-secondary {
+            background: rgba(157, 78, 221, 0.15);
+            color: #E8EAED;
+            border: 1px solid rgba(157, 78, 221, 0.3);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(157, 78, 221, 0.25);
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        /* Metrics */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .metric-box {
+            background: #252D47;
+            border: 1px solid rgba(157, 78, 221, 0.2);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #9D4EDD;
+            margin: 8px 0;
+        }
+
+        .metric-label {
+            font-size: 12px;
+            color: #9CA3AF;
+        }
+
+        /* Onboarding Progress */
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(157, 78, 221, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 8px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #9D4EDD 0%, #06FFA5 100%);
+            border-radius: 4px;
+            transition: width 0.3s;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #1B2437;
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 600px;
+            width: 90%;
+            border: 1px solid rgba(157, 78, 221, 0.2);
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px 12px;
+            background: rgba(10, 14, 39, 0.8);
+            border: 1px solid rgba(157, 78, 221, 0.3);
+            border-radius: 8px;
+            color: #E8EAED;
+            font-family: inherit;
+            font-size: 13px;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #9D4EDD;
+            box-shadow: 0 0 12px rgba(157, 78, 221, 0.3);
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+            margin-top: 24px;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .recruiting-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                display: none;
+            }
+
+            .recruiting-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .metrics-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            table {
+                font-size: 12px;
+            }
+
+            th, td {
+                padding: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <h2>⬢ THREE Growth</h2>
+            <div class="sidebar-nav">
+                <div class="nav-link active" onclick="switchView('recruiting')">🔍 Recruiting</div>
+                <div class="nav-link" onclick="switchView('onboarding')">📋 Onboarding</div>
+                <div class="nav-link" onclick="switchView('retention')">❤️ Retention</div>
+                <div class="nav-link" onclick="switchView('analytics')">📊 Analytics</div>
+            </div>
+        </div>
+
+        <!-- Main -->
+        <div class="main">
+            <!-- Header -->
+            <div class="header">
+                <h1 id="page-title">Driver Growth System</h1>
+                <button class="btn btn-primary" onclick="openModal('add-candidate')">+ Add Candidate</button>
+            </div>
+
+            <!-- Content -->
+            <div class="content">
+
+                <!-- Recruiting View -->
+                <div id="recruiting-view" class="view active">
+                    <div class="card">
+                        <div class="card-title">🚀 Recruiting Pipelines</div>
+                        <div class="recruiting-grid">
+                            <div class="pipeline-box">
+                                <div class="pipeline-icon">🔍</div>
+                                <div class="pipeline-name">Lane Search</div>
+                                <div class="pipeline-count" id="lane-count">24</div>
+                                <div class="pipeline-subtitle">Active searches</div>
+                            </div>
+                            <div class="pipeline-box">
+                                <div class="pipeline-icon">📊</div>
+                                <div class="pipeline-name">FMCSA Data</div>
+                                <div class="pipeline-count" id="fmcsa-count">156</div>
+                                <div class="pipeline-subtitle">MCs mined</div>
+                            </div>
+                            <div class="pipeline-box">
+                                <div class="pipeline-icon">📱</div>
+                                <div class="pipeline-name">Social</div>
+                                <div class="pipeline-count" id="social-count">42</div>
+                                <div class="pipeline-subtitle">Responses</div>
+                            </div>
+                            <div class="pipeline-box">
+                                <div class="pipeline-icon">🤝</div>
+                                <div class="pipeline-name">Referrals</div>
+                                <div class="pipeline-count" id="referral-count">18</div>
+                                <div class="pipeline-subtitle">Pending</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-title">👥 Driver Candidates</div>
+                        <div class="table-container">
+                            <table id="candidates-table">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Company</th>
+                                        <th>Equipment</th>
+                                        <th>Status</th>
+                                        <th>Outreach</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="candidates-body">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Onboarding View -->
+                <div id="onboarding-view" class="view">
+                    <div class="card">
+                        <div class="card-title">📋 Onboarding Pipeline</div>
+                        <div class="metrics-grid">
+                            <div class="metric-box">
+                                <div class="metric-label">Pending Review</div>
+                                <div class="metric-value" id="pending-apps">8</div>
+                            </div>
+                            <div class="metric-box">
+                                <div class="metric-label">In Review</div>
+                                <div class="metric-value" id="review-apps">3</div>
+                            </div>
+                            <div class="metric-box">
+                                <div class="metric-label">Approved</div>
+                                <div class="metric-value" id="approved-apps">24</div>
+                            </div>
+                            <div class="metric-box">
+                                <div class="metric-label">Avg Time</div>
+                                <div class="metric-value" id="avg-time">2.5m</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-title">📊 Active Applications</div>
+                        <div class="table-container">
+                            <table id="applications-table">
+                                <thead>
+                                    <tr>
+                                        <th>Candidate</th>
+                                        <th>W-9</th>
+                                        <th>COI</th>
+                                        <th>MC</th>
+                                        <th>Verified</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="applications-body">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Retention View -->
+                <div id="retention-view" class="view">
+                    <div class="card">
+                        <div class="card-title">❤️ Driver Retention</div>
+                        <div class="metrics-grid">
+                            <div class="metric-box">
+                                <div class="metric-label">Active Drivers</div>
+                                <div class="metric-value" id="active-drivers">47</div>
+                            </div>
+                            <div class="metric-box">
+                                <div class="metric-label">This Week</div>
+                                <div class="metric-value" id="checkins-week">41</div>
+                            </div>
+                            <div class="metric-box">
+                                <div class="metric-label">Retention Rate</div>
+                                <div class="metric-value" id="retention-rate">94%</div>
+                            </div>
+                            <div class="metric-box">
+                                <div class="metric-label">Avg Tenure</div>
+                                <div class="metric-value" id="avg-tenure">18mo</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-title">📞 Weekly Check-Ins</div>
+                        <div class="table-container">
+                            <table id="checkins-table">
+                                <thead>
+                                    <tr>
+                                        <th>Driver</th>
+                                        <th>Last Check-In</th>
+                                        <th>Sentiment</th>
+                                        <th>Issues</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="checkins-body">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Analytics View -->
+                <div id="analytics-view" class="view">
+                    <div class="card">
+                        <div class="card-title">📈 Growth Metrics</div>
+                        <div class="metrics-grid">
+                            <div class="metric-box">
+                                <div class="metric-label">New Drivers (30d)</div>
+                                <div class="metric-value" id="new-drivers-30d">12</div>
+                            </div>
+                            <div class="metric-box">
+                                <div class="metric-label">Conversion Rate</div>
+                                <div class="metric-value" id="conversion-rate">23%</div>
+                            </div>
+                            <div class="metric-box">
+                                <div class="metric-label">Cost per Driver</div>
+                                <div class="metric-value" id="cost-per-driver">$340</div>
+                            </div>
+                            <div class="metric-box">
+                                <div class="metric-label">Growth Rate</div>
+                                <div class="metric-value" id="growth-rate">+18%</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Add Candidate -->
+    <div class="modal" id="add-candidate-modal">
+        <div class="modal-content">
+            <div class="modal-title">Add Driver Candidate</div>
+            <form onsubmit="addCandidate(event)">
+                <div class="form-group">
+                    <label>Name *</label>
+                    <input type="text" id="candidate-name" required>
+                </div>
+                <div class="form-group">
+                    <label>Email *</label>
+                    <input type="email" id="candidate-email" required>
+                </div>
+                <div class="form-group">
+                    <label>Phone *</label>
+                    <input type="tel" id="candidate-phone" required>
+                </div>
+                <div class="form-group">
+                    <label>Company</label>
+                    <input type="text" id="candidate-company">
+                </div>
+                <div class="form-group">
+                    <label>Equipment</label>
+                    <select id="candidate-equipment">
+                        <option>Dry Van</option>
+                        <option>Reefer</option>
+                        <option>Flatbed</option>
+                        <option>Tanker</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Source *</label>
+                    <select id="candidate-source" required>
+                        <option value="">Select source</option>
+                        <option value="1">Lane Search</option>
+                        <option value="2">FMCSA</option>
+                        <option value="3">Social</option>
+                        <option value="4">Referral</option>
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Candidate</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // View switching
+        function switchView(view) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.getElementById(view + '-view').classList.add('active');
+            
+            const titles = {
+                recruiting: '🔍 Recruiting Pipeline',
+                onboarding: '📋 Onboarding System',
+                retention: '❤️ Retention Engine',
+                analytics: '📈 Growth Analytics'
+            };
+            document.getElementById('page-title').textContent = titles[view];
+        }
+
+        // Modal
+        function openModal(modal) {
+            document.getElementById(modal + '-modal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.querySelectorAll('.modal').forEach(m => m.classList.remove('active'));
+        }
+
+        // Add candidate
+        function addCandidate(e) {
+            e.preventDefault();
+            alert('Candidate added successfully!');
+            closeModal();
+        }
+
+        // Load data
+        async function loadData() {
+            try {
+                const response = await fetch('/api/driver-growth/candidates');
+                const candidates = await response.json();
+                renderCandidates(candidates);
+            } catch (error) {
+                console.error('Error loading data:', error);
+            }
+        }
+
+        function renderCandidates(candidates) {
+            const tbody = document.getElementById('candidates-body');
+            tbody.innerHTML = candidates.map(c => `
+                <tr>
+                    <td>${c.name}</td>
+                    <td>${c.company}</td>
+                    <td>${c.equipment}</td>
+                    <td><span class="badge badge-${c.status}">${c.status}</span></td>
+                    <td>${c.outreach_count}</td>
+                    <td>
+                        <button class="btn btn-sm btn-secondary">Outreach</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Initialize
+        loadData();
+    </script>
+</body>
+</html>
