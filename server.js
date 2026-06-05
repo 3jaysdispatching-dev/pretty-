@@ -21,6 +21,7 @@ const invoicesRouter = require('./routes/invoices');
 const complianceRouter = require('./routes/compliance');
 const notificationsRouter = require('./routes/notifications');
 const settingsRouter = require('./routes/settings');
+const driverGrowthRouter = require('./routes/driver-growth');
 
 app.use('/api/drivers', driversRouter);
 app.use('/api/loads', loadsRouter);
@@ -28,6 +29,7 @@ app.use('/api/invoices', invoicesRouter);
 app.use('/api/compliance', complianceRouter);
 app.use('/api/notifications', notificationsRouter);
 app.use('/api/settings', settingsRouter);
+app.use('/api/driver-growth', driverGrowthRouter);
 
 // Health check
 app.get('/api/health', (req, res) => {
