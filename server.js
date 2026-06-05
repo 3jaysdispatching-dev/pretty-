@@ -22,6 +22,7 @@ const complianceRouter = require('./routes/compliance');
 const notificationsRouter = require('./routes/notifications');
 const settingsRouter = require('./routes/settings');
 const driverGrowthRouter = require('./routes/driver-growth');
+const seedRouter = require('./routes/seed');
 
 app.use('/api/drivers', driversRouter);
 app.use('/api/loads', loadsRouter);
@@ -30,6 +31,7 @@ app.use('/api/compliance', complianceRouter);
 app.use('/api/notifications', notificationsRouter);
 app.use('/api/settings', settingsRouter);
 app.use('/api/driver-growth', driverGrowthRouter);
+app.use('/api/seed', seedRouter);
 
 // Health check
 app.get('/api/health', (req, res) => {
